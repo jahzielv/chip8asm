@@ -1,0 +1,15 @@
+clear clr
+subroutine jump clear
+    call sub
+    ske v13 12
+    skne v10 15
+    skre v1 v2
+    load v14 0xabc
+    add v14 0xef
+    move v1 v2
+    or v1 v2
+    xor v1 v2
+    addr v1 v2
+    loadi 0x123
+    addi v10
+    rts

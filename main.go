@@ -40,12 +40,12 @@ func parseReg(s *scanner.Scanner) uint16 {
 func main() {
 	rom := make([]uint16, 0)
 	symbolTable := make(map[string]uint16)
-	src, _ := ioutil.ReadFile("test.8asm")
+	src, _ := ioutil.ReadFile(os.Args[1])
 	var s scanner.Scanner
 	s.Init(bytes.NewBuffer(src))
 	labeledLine := false
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-		fmt.Printf("pos: %s text: %s\n", s.Position, s.TokenText())
+		// fmt.Printf("pos: %s text: %s\n", s.Position, s.TokenText())
 		text := strings.ToLower(s.TokenText())
 		switch text {
 		case "rts":
@@ -74,7 +74,7 @@ func main() {
 			split := strings.Split(regStr, "v")
 			regNum, _ := strconv.ParseUint(split[1], 10, 16)
 			regNum16 := uint16(regNum)
-			fmt.Printf("reg: %#x\n", regNum16)
+			// fmt.Printf("reg: %#x\n", regNum16)
 			// now get the second operand
 			tok = s.Scan()
 			imm64, _ := strconv.ParseUint(s.TokenText(), 10, 16)
@@ -94,7 +94,7 @@ func main() {
 			split := strings.Split(regStr, "v")
 			regNum, _ := strconv.ParseUint(split[1], 10, 16)
 			regNum16 := uint16(regNum)
-			fmt.Printf("reg: %#x\n", regNum16)
+			// fmt.Printf("reg: %#x\n", regNum16)
 			// now get the second operand
 			tok = s.Scan()
 			imm64, _ := strconv.ParseUint(s.TokenText(), 10, 16)
@@ -372,13 +372,13 @@ func main() {
 			symbolTable[text] = progStart + uint16(s.Pos().Line)
 			labeledLine = true
 		}
-		fmt.Println(rom)
+		// fmt.Println(rom)
 	}
 
-	fmt.Println(rom)
+	// fmt.Println(rom)
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.BigEndian, rom)
-	out, _ := os.Create("test.bin")
+	out, _ := os.Create(os.Args[2])
 	defer out.Close()
 	out.Write(buf.Bytes())
 

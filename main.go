@@ -40,10 +40,12 @@ func parseReg(s *scanner.Scanner) uint16 {
 func main() {
 	rom := make([]uint16, 0)
 	symbolTable := make(map[string]uint16)
+	undefTable := make(map[string][]int)
 	src, _ := ioutil.ReadFile(os.Args[1])
 	var s scanner.Scanner
 	s.Init(bytes.NewBuffer(src))
 	labeledLine := false
+	currInstNum := 0
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		// fmt.Printf("pos: %s text: %s\n", s.Position, s.TokenText())
 		text := strings.ToLower(s.TokenText())
@@ -56,7 +58,14 @@ func main() {
 			labeledLine = false
 		case "jump":
 			tok = s.Scan()
-			rom = append(rom, 0x1000|symbolTable[s.TokenText()])
+			jumpAddr := symbolTable[s.TokenText()]
+			if jumpAddr == 0 {
+				undefTable[s.TokenText()] = append(undefTable[s.TokenText()], currInstNum)
+				rom = append(rom, 0x1000)
+			} else {
+				rom = append(rom, 0x1000|symbolTable[s.TokenText()])
+				labeledLine = false
+			}
 			labeledLine = false
 		case "call":
 			tok = s.Scan()
@@ -81,6 +90,7 @@ func main() {
 			imm := uint16(imm64)
 
 			rom = append(rom, 0x3000|regNum16<<8|imm)
+			labeledLine = false
 
 		case "skne":
 			tok = s.Scan()
@@ -101,6 +111,7 @@ func main() {
 			imm := uint16(imm64)
 
 			rom = append(rom, 0x4000|regNum16<<8|imm)
+			labeledLine = false
 
 		case "skre":
 			tok = s.Scan()
@@ -122,6 +133,7 @@ func main() {
 			reg2Num := getRegNum(reg2Str)
 
 			rom = append(rom, 0x5000|reg1Num<<8|reg2Num<<4)
+			labeledLine = false
 		case "load":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -138,6 +150,7 @@ func main() {
 			imm16 := uint16(imm)
 
 			rom = append(rom, 0x6000|srcRegNum<<8|imm16)
+			labeledLine = false
 		case "add":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -154,6 +167,7 @@ func main() {
 			imm16 := uint16(imm)
 
 			rom = append(rom, 0x7000|srcRegNum<<8|imm16)
+			labeledLine = false
 		case "move":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -173,6 +187,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|0)
+			labeledLine = false
 		case "or":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -192,6 +207,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|1)
+			labeledLine = false
 		case "and":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -211,6 +227,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|2)
+			labeledLine = false
 		case "xor":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -230,6 +247,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|3)
+			labeledLine = false
 		case "addr":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -249,6 +267,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|4)
+			labeledLine = false
 		case "sub":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -268,6 +287,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|5)
+			labeledLine = false
 		case "slh":
 			tok = s.Scan()
 			srcReg := s.TokenText()
@@ -287,6 +307,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x8000|srcRegNum<<8|destRegNum<<4|6)
+			labeledLine = false
 
 		case "skrne":
 			tok = s.Scan()
@@ -307,6 +328,7 @@ func main() {
 			destRegNum := getRegNum(destReg)
 
 			rom = append(rom, 0x9000|srcRegNum<<8|destRegNum<<4|0)
+			labeledLine = false
 		case "loadi":
 			tok = s.Scan()
 			immStr := s.TokenText()
@@ -319,6 +341,7 @@ func main() {
 			}
 			imm16 := uint16(imm)
 			rom = append(rom, 0xA000|imm16)
+			labeledLine = false
 		case "jumpi":
 			tok = s.Scan()
 			immStr := s.TokenText()
@@ -331,6 +354,7 @@ func main() {
 			}
 			imm16 := uint16(imm)
 			rom = append(rom, 0xB000|imm16)
+			labeledLine = false
 		case "rand":
 			tok = s.Scan()
 			destReg := s.TokenText()
@@ -354,25 +378,40 @@ func main() {
 			imm16 := uint16(imm)
 
 			rom = append(rom, 0xC000|destRegNum<<8|imm16)
+			labeledLine = false
 		case "addi":
 			srcRegNum := parseReg(&s)
 			rom = append(rom, 0xF01E|srcRegNum<<8)
+			labeledLine = false
 		case "stor":
 			srcRegNum := parseReg(&s)
 			rom = append(rom, 0xF055|srcRegNum<<8)
+			labeledLine = false
 		case "read":
 			srcRegNum := parseReg(&s)
 			rom = append(rom, 0xF065|srcRegNum<<8)
+			labeledLine = false
 
 		default:
 			if labeledLine {
 				badInst := fmt.Errorf("unrecognized instruction at line %d", s.Pos().Line)
 				panic(badInst)
 			}
-			symbolTable[text] = progStart + uint16(s.Pos().Line)
+			backRefs := undefTable[s.TokenText()]
+			fmt.Println("backrefs: ", backRefs)
+			if len(backRefs) > 0 {
+				for _, ref := range backRefs {
+					rom[ref] = rom[ref] | (progStart + uint16(s.Pos().Line-1)*2)
+				}
+			}
+			symbolTable[text] = progStart + uint16(s.Pos().Line-1)*2
+			currInstNum--
 			labeledLine = true
 		}
 		// fmt.Println(rom)
+		currInstNum++
+		fmt.Println("sym", symbolTable)
+		fmt.Println("undef", undefTable)
 	}
 
 	// fmt.Println(rom)

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -38,10 +39,31 @@ func parseReg(s *scanner.Scanner) uint16 {
 }
 
 func main() {
+
+	var inFile string
+	var outFile string
+	flag.StringVar(&inFile, "i", "", "The Chip8 asm file to assemble.")
+	flag.StringVar(&outFile, "o", "", "The assembled Chip8 binary.")
+	flag.Parse()
+
+	if inFile == "" {
+		fmt.Fprintf(os.Stderr, "Error: No input file provided!\n")
+		os.Exit(1)
+
+	}
+	if outFile == "" {
+		fmt.Fprintf(os.Stderr, "Error: No output filename specified!\n")
+		os.Exit(1)
+	}
+
 	rom := make([]uint16, 0)
 	symbolTable := make(map[string]uint16)
 	undefTable := make(map[string][]int)
-	src, _ := ioutil.ReadFile(os.Args[1])
+	src, err := ioutil.ReadFile(inFile)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		os.Exit(1)
+	}
 	var s scanner.Scanner
 	s.Init(bytes.NewBuffer(src))
 	labeledLine := false
@@ -417,7 +439,7 @@ func main() {
 	// fmt.Println(rom)
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.BigEndian, rom)
-	out, _ := os.Create(os.Args[2])
+	out, _ := os.Create(outFile)
 	defer out.Close()
 	out.Write(buf.Bytes())
 

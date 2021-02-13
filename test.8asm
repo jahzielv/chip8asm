@@ -1,15 +1,8 @@
-add1 add v1 1
-     add v2 2
-     jump add3
-     add v2 2
-     add v2 2
-     add v2 2
-     jump add3
-     add v2 2
-     add v2 2
-     add v2 2
-     jump add1
-     add v2 2
-     add v2 2
-     add v2 2
-add3 add v3 3
+clear1  CLR
+clear2  CLR
+        LOADI 0xaa
+        CALL FUNC
+        LOADI 0x12
+        LOADI 0x34
+END     LOADI 0xDD
+FUNC    JUMP END

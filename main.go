@@ -69,7 +69,6 @@ func main() {
 	labeledLine := false
 	currInstNum := 0
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-		// fmt.Printf("pos: %s text: %s\n", s.Position, s.TokenText())
 		text := strings.ToLower(s.TokenText())
 		switch text {
 		case "rts":
@@ -91,7 +90,14 @@ func main() {
 			labeledLine = false
 		case "call":
 			tok = s.Scan()
-			rom = append(rom, 0x2000|symbolTable[s.TokenText()])
+			callAddr := symbolTable[s.TokenText()]
+			if callAddr == 0 {
+				undefTable[s.TokenText()] = append(undefTable[s.TokenText()], currInstNum)
+				rom = append(rom, 0x2000)
+			} else {
+				rom = append(rom, 0x2000|symbolTable[s.TokenText()])
+				labeledLine = false
+			}
 			labeledLine = false
 		case "ske":
 			tok = s.Scan()
@@ -424,6 +430,7 @@ func main() {
 			if len(backRefs) > 0 {
 				for _, ref := range backRefs {
 					rom[ref] = rom[ref] | (progStart + uint16(s.Pos().Line-1)*2)
+					fmt.Printf(">>>>>>> rom[%d]: %x\n", ref, rom[ref])
 				}
 			}
 			symbolTable[text] = progStart + uint16(s.Pos().Line-1)*2

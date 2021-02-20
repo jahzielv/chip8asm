@@ -1,8 +1,7 @@
-clear1  CLR
-clear2  CLR
+        ADD v1 0x12
+        ADD v1 0x3
         LOADI 0xaa
         CALL FUNC
-        LOADI 0x12
-        LOADI 0x34
-END     LOADI 0xDD
+        LOADI 0xDD
 FUNC    JUMP END
+END     LOADI 0xFF

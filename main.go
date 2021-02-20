@@ -78,24 +78,28 @@ func main() {
 			rom = append(rom, 0x00E0)
 			labeledLine = false
 		case "jump":
+			// todo: find bug here; a jump at the end isn't getting the right addr from
+			// the symbol table
 			tok = s.Scan()
-			jumpAddr := symbolTable[s.TokenText()]
+			tokText := strings.ToLower(s.TokenText())
+			jumpAddr := symbolTable[tokText]
 			if jumpAddr == 0 {
-				undefTable[s.TokenText()] = append(undefTable[s.TokenText()], currInstNum)
+				undefTable[tokText] = append(undefTable[tokText], currInstNum)
 				rom = append(rom, 0x1000)
 			} else {
-				rom = append(rom, 0x1000|symbolTable[s.TokenText()])
+				rom = append(rom, 0x1000|symbolTable[tokText])
 				labeledLine = false
 			}
 			labeledLine = false
 		case "call":
 			tok = s.Scan()
-			callAddr := symbolTable[s.TokenText()]
+			tokText := strings.ToLower(s.TokenText())
+			callAddr := symbolTable[tokText]
 			if callAddr == 0 {
-				undefTable[s.TokenText()] = append(undefTable[s.TokenText()], currInstNum)
+				undefTable[tokText] = append(undefTable[tokText], currInstNum)
 				rom = append(rom, 0x2000)
 			} else {
-				rom = append(rom, 0x2000|symbolTable[s.TokenText()])
+				rom = append(rom, 0x2000|symbolTable[tokText])
 				labeledLine = false
 			}
 			labeledLine = false
@@ -182,6 +186,7 @@ func main() {
 		case "add":
 			tok = s.Scan()
 			srcReg := s.TokenText()
+			fmt.Println("======= hee", srcReg)
 			srcRegNum := getRegNum(srcReg)
 			tok = s.Scan()
 			immStr := s.TokenText()
@@ -425,7 +430,7 @@ func main() {
 				badInst := fmt.Errorf("unrecognized instruction at line %d", s.Pos().Line)
 				panic(badInst)
 			}
-			backRefs := undefTable[s.TokenText()]
+			backRefs := undefTable[strings.ToLower(s.TokenText())]
 			fmt.Println("backrefs: ", backRefs)
 			if len(backRefs) > 0 {
 				for _, ref := range backRefs {

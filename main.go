@@ -176,7 +176,6 @@ func main() {
 			if immStr[0] == '0' && immStr[1] == 'x' {
 				imm, _ = strconv.ParseUint(immStr[2:], 16, 16)
 			} else {
-
 				imm, _ = strconv.ParseUint(immStr, 10, 16)
 			}
 			imm16 := uint16(imm)
@@ -424,7 +423,24 @@ func main() {
 			srcRegNum := parseReg(&s)
 			rom = append(rom, 0xF065|srcRegNum<<8)
 			labeledLine = false
+		case "draw":
+			srcRegNum1 := parseReg(&s)
+			srcRegNum2 := parseReg(&s)
 
+			tok = s.Scan()
+			immStr := s.TokenText()
+			var imm uint64
+			if immStr[0] == '0' && immStr[1] == 'x' {
+				imm, _ = strconv.ParseUint(immStr[2:], 16, 16)
+			} else {
+				imm, _ = strconv.ParseUint(immStr, 10, 16)
+			}
+			imm16 := uint16(imm)
+
+			rom = append(rom, 0xD000|srcRegNum1<<8|srcRegNum2<<4|imm16)
+
+			fmt.Println("DRAW", srcRegNum1, srcRegNum2, imm16, 0xD000|srcRegNum1<<8|srcRegNum2<<4|imm16)
+			labeledLine = false
 		default:
 			if labeledLine {
 				badInst := fmt.Errorf("unrecognized instruction at line %d", s.Pos().Line)
